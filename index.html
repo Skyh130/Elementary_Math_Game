@@ -2,130 +2,47 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <!-- 확대 방지 및 모바일 화면에 정확히 맞추기 위한 설정 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>수학 용사의 모험</title>
   <style>
-    /* 전체 리셋 및 터치 최적화 (더블탭 확대 방지) */
-    * { 
-      box-sizing: border-box; 
-      margin: 0; 
-      padding: 0; 
-      font-family: 'Malgun Gothic', sans-serif; 
-      touch-action: manipulation; 
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', sans-serif; touch-action: manipulation; }
+    html, body { width: 100%; height: 100%; background-color: #2c3e50; color: white; overflow: hidden; }
+    #app-container { position: absolute; top: 0; bottom: 0; left: 0; right: 0; display: flex; flex-direction: column; }
     
-    html, body { 
-      width: 100%; 
-      height: 100%; /* vh 대신 %를 사용하여 브라우저 UI에 의한 잘림 방지 */
-      background-color: #2c3e50; 
-      color: white; 
-      overflow: hidden; 
-    }
-
-    /* 화면 전체를 꽉 채우는 컨테이너 */
-    #app-container {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    /* 상단 대시보드 (크기 고정) */
-    #dashboard { 
-      flex-shrink: 0; /* 화면이 작아져도 줄어들지 않음 */
-      background-color: #34495e; 
-      padding: 15px; 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      border-bottom: 4px solid #1abc9c; 
-    }
+    #dashboard { flex-shrink: 0; background-color: #34495e; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #1abc9c; }
     .hero-info { font-size: 1.2rem; font-weight: bold; color: #f1c40f; }
     .hero-hp { font-size: 1.2rem; color: #e74c3c; }
 
-    /* 전투 영역 (남은 공간을 모두 차지하되, 넘치면 스크롤) */
-    #battle-area { 
-      flex: 1 1 auto; 
-      display: flex; 
-      flex-direction: column; 
-      justify-content: center; 
-      align-items: center; 
-      padding: 10px; 
-      overflow-y: auto; 
-    }
+    #battle-area { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 10px; overflow-y: auto; }
     #monster { font-size: 80px; margin-bottom: 15px; animation: bounce 1s infinite alternate; }
-    #question { font-size: 3rem; font-weight: bold; background: #ecf0f1; color: #2c3e50; padding: 15px 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); text-align: center; }
+    #question { font-size: 3rem; font-weight: bold; background: #ecf0f1; color: #2c3e50; padding: 15px 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); text-align: center; word-break: keep-all; }
     #answer-display { font-size: 2.5rem; color: #3498db; margin-top: 15px; min-height: 50px; font-weight: bold; }
     #message-log { font-size: 1.2rem; color: #2ecc71; margin-top: 5px; min-height: 30px; text-align: center; }
 
-    /* 숫자 키패드 (크기 고정, 태블릿 하단 여백 완벽 대응) */
-    #numpad { 
-      flex-shrink: 0; /* 키패드가 찌그러지지 않도록 보호 */
-      display: grid; 
-      grid-template-columns: repeat(3, 1fr); 
-      gap: 10px; 
-      padding: 15px; 
-      /* 아이패드 등 하단 홈바(Safe Area) 영역을 침범하지 않도록 여백 추가 */
-      padding-bottom: max(15px, env(safe-area-inset-bottom));
-      background-color: #bdc3c7; 
-      border-top-left-radius: 20px; 
-      border-top-right-radius: 20px; 
-    }
-    
-    .btn { 
-      background-color: #fff; 
-      color: #333; 
-      font-size: 1.8rem; 
-      font-weight: bold; 
-      padding: 15px 0; /* 태블릿 세로 화면에서 너무 길어지지 않게 조정 */
-      border: none; 
-      border-radius: 10px; 
-      box-shadow: 0 4px #95a5a6; 
-      cursor: pointer; 
-      user-select: none; 
-    }
+    #numpad { flex-shrink: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; padding-bottom: max(15px, env(safe-area-inset-bottom)); background-color: #bdc3c7; border-top-left-radius: 20px; border-top-right-radius: 20px; }
+    .btn { background-color: #fff; color: #333; font-size: 1.8rem; font-weight: bold; padding: 15px 0; border: none; border-radius: 10px; box-shadow: 0 4px #95a5a6; cursor: pointer; user-select: none; }
     .btn:active { transform: translateY(4px); box-shadow: 0 0 #95a5a6; }
     .btn-action { background-color: #f39c12; color: white; box-shadow: 0 4px #d68910; }
-    .btn-submit { 
-      background-color: #2ecc71; 
-      color: white; 
-      box-shadow: 0 4px #27ae60; 
-      grid-column: span 3; 
-      font-size: 1.5rem; 
-      padding: 20px 0; /* 제출 버튼은 누르기 쉽게 조금 더 크게 유지 */
-    }
+    .btn-submit { background-color: #2ecc71; color: white; box-shadow: 0 4px #27ae60; grid-column: span 3; font-size: 1.5rem; padding: 20px 0; }
 
-    /* 몬스터 애니메이션 */
-    @keyframes bounce {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(-20px); }
-    }
+    @keyframes bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-20px); } }
   </style>
 </head>
 <body>
 
-  <!-- 전체 화면 컨테이너 추가 -->
   <div id="app-container">
-    
-    <!-- 1. 대시보드 영역 -->
     <div id="dashboard">
       <div class="hero-info" id="hero-name">용사 레벨 1</div>
       <div class="hero-hp" id="hero-hp">❤️ HP: 100</div>
     </div>
 
-    <!-- 2. 전투(문제) 영역 -->
     <div id="battle-area">
-      <div id="monster">👾</div>
-      <div id="question">준비 중...</div>
+      <div id="monster">⏳</div>
+      <div id="question">로딩 중...</div>
       <div id="answer-display"></div>
-      <div id="message-log">게임을 시작합니다!</div>
+      <div id="message-log" style="color: #f1c40f;">서버에서 몬스터들을 소환하는 중입니다...</div>
     </div>
 
-    <!-- 3. 아이 전용 터치 키패드 영역 -->
     <div id="numpad">
       <button class="btn" onclick="inputNumber(1)">1</button>
       <button class="btn" onclick="inputNumber(2)">2</button>
@@ -141,34 +58,78 @@
       <button class="btn btn-action" onclick="deleteLast()">←</button>
       <button class="btn btn-submit" onclick="submitAnswer()">공격! (정답 제출)</button>
     </div>
-
   </div>
 
   <script>
-    const API_URL = '여기에_배포된_웹앱_URL을_입력하세요';
+    // ==========================================
+    // 설정 영역: 배포하신 GAS 웹앱 URL을 입력하세요!
+    // ==========================================
+    const API_URL = 'https://script.google.com/macros/s/AKfycbx2-yitbFxrT-xk4iWncBNLfuhyIrgHcPUTRmpLQtih4-xs9oAUCLLsiDhWqmhvmZ7k/exec'; 
     const USER_ID = 'hero_01'; 
+    
+    // 시트에서 불러올 문제의 조건 (아까 입력한 예시 데이터와 일치하게 설정)
+    const CURRENT_CATEGORY = '덧셈'; 
+    const CURRENT_DIFFICULTY = 1;
 
+    let questionList = []; // 서버에서 받아온 문제들을 담을 배열
+    let currentIndex = 0;  // 현재 몇 번째 문제를 풀고 있는지
+    let currentQuestion = null; // 현재 문제 데이터
     let currentAnswer = "";
     let questionStartTime = 0;
-    
-    let currentQuestion = {
-      id: "Q_001",
-      text: "24 + 15 = ?",
-      answer: "39",
-      monster: "🐉"
-    };
 
+    // 앱이 켜지면 가장 먼저 실행되는 함수
     window.onload = () => {
-      renderQuestion();
+      loadQuestions();
     };
 
-    function renderQuestion() {
+    // 1. 서버(구글 시트)에서 문제 불러오기
+    async function loadQuestions() {
+      try {
+        const url = `${API_URL}?action=getStageQuestions&category=${CURRENT_CATEGORY}&difficulty=${CURRENT_DIFFICULTY}`;
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.success && result.data.length > 0) {
+          questionList = result.data;
+          currentIndex = 0;
+          nextQuestion(); // 첫 번째 문제 화면에 표시
+        } else {
+          showMessage("이 스테이지에는 아직 몬스터가 없습니다!", "#e74c3c");
+          document.getElementById('question').innerText = "문제 없음";
+          document.getElementById('monster').innerText = "텅~";
+        }
+      } catch (error) {
+        console.error("통신 에러:", error);
+        showMessage("통신 에러! API 주소를 확인해주세요.", "#e74c3c");
+      }
+    }
+
+    // 2. 화면에 다음 문제 그리기
+    function nextQuestion() {
+      // 모든 문제를 다 풀었을 때
+      if (currentIndex >= questionList.length) {
+        showMessage("스테이지 클리어! 모든 몬스터를 물리쳤습니다! 🎉", "#f1c40f");
+        document.getElementById('monster').innerText = "👑";
+        document.getElementById('question').innerText = "CLEAR!";
+        currentQuestion = null;
+        return;
+      }
+
+      // 시트의 컬럼명과 매핑
+      const qData = questionList[currentIndex];
+      currentQuestion = {
+        id: qData.question_id,
+        text: qData.question_text,
+        answer: String(qData.answer), // 입력값 비교를 위해 문자로 변환
+        monster: qData.monster_name
+      };
+
       document.getElementById('monster').innerText = currentQuestion.monster;
       document.getElementById('question').innerText = currentQuestion.text;
       currentAnswer = "";
       updateAnswerDisplay();
       questionStartTime = Date.now();
-      showMessage("몬스터가 나타났다!");
+      showMessage(`[${currentIndex + 1}/${questionList.length}] 몬스터가 나타났다!`);
     }
 
     function inputNumber(num) {
@@ -198,7 +159,9 @@
       msgLog.style.color = color;
     }
 
-    async function submitAnswer() {
+    // 3. 정답 제출 및 서버로 결과 전송
+    function submitAnswer() {
+      if (!currentQuestion) return; 
       if (currentAnswer === "") {
         showMessage("답을 입력해주세요!", "#f1c40f");
         return;
@@ -217,6 +180,7 @@
         return; 
       }
 
+      // 서버에 보낼 전투 기록 데이터
       const payload = {
         action: "submitBattleResult",
         userId: USER_ID,
@@ -228,16 +192,20 @@
         earnedGold: isCorrect ? 5 : 0
       };
 
-      try {
-        setTimeout(() => {
-          currentQuestion = { id: "Q_002", text: "8 × 7 = ?", answer: "56", monster: "👻" };
-          renderQuestion();
-        }, 2000);
+      // 백엔드로 전송 (게임 흐름이 끊기지 않게 비동기 전송)
+      fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      }).then(res => res.json())
+        .then(result => console.log("서버 기록 완료:", result))
+        .catch(err => console.error("기록 전송 실패:", err));
 
-      } catch (error) {
-        console.error("서버 통신 에러:", error);
-        showMessage("통신에 실패했습니다.", "#e74c3c");
-      }
+      // 1.5초 뒤에 다음 문제로 넘어감
+      setTimeout(() => {
+        currentIndex++;
+        nextQuestion();
+      }, 1500);
     }
   </script>
 </body>
