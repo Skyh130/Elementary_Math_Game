@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>수학 용사의 모험</title>
+  <style>
+    /* 전체 리셋 및 모바일 최적화 */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', sans-serif; }
+    body { background-color: #2c3e50; color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    
+    /* 상단 대시보드 (수정/삭제가 용이한 모듈형 구조) */
+    #dashboard { background-color: #34495e; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #1abc9c; }
+    .hero-info { font-size: 1.2rem; font-weight: bold; color: #f1c40f; }
+    .hero-hp { font-size: 1.2rem; color: #e74c3c; }
+
+    /* 전투 영역 (몬스터와 수학 문제) */
+    #battle-area { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+    #monster { font-size: 80px; margin-bottom: 20px; animation: bounce 1s infinite alternate; }
+    #question { font-size: 3rem; font-weight: bold; background: #ecf0f1; color: #2c3e50; padding: 20px 40px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+    #answer-display { font-size: 2.5rem; color: #3498db; margin-top: 15px; min-height: 50px; font-weight: bold; }
+
+    /* 알림 메시지 영역 */
+    #message-log { font-size: 1.2rem; color: #2ecc71; margin-top: 10px; min-height: 30px; }
+
+    /* 숫자 키패드 (아이들 손가락에 맞춘 큰 버튼 레이아웃) */
+    #numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 20px; background-color: #bdc3c7; border-top-left-radius: 20px; border-top-right-radius: 20px; }
+    .btn { background-color: #fff; color: #333; font-size: 2rem; font-weight: bold; padding: 20px 0; border: none; border-radius: 10px; box-shadow: 0 4px #95a5a6; cursor: pointer; user-select: none; }
+    .btn:active { transform: translateY(4px); box-shadow: 0 0 #95a5a6; }
+    .btn-action { background-color: #f39c12; color: white; box-shadow: 0 4px #d68910; }
+    .btn-submit { background-color: #2ecc71; color: white; box-shadow: 0 4px #27ae60; grid-column: span 3; }
+
+    /* 몬스터 애니메이션 */
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-20px); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. 대시보드 영역 -->
+  <div id="dashboard">
+    <div class="hero-info" id="hero-name">용사 레벨 1</div>
+    <div class="hero-hp" id="hero-hp">❤️ HP: 100</div>
+  </div>
+
+  <!-- 2. 전투(문제) 영역 -->
+  <div id="battle-area">
+    <div id="monster">👾</div>
+    <div id="question">준비 중...</div>
+    <div id="answer-display"></div>
+    <div id="message-log">게임을 시작합니다!</div>
+  </div>
+
+  <!-- 3. 아이 전용 터치 키패드 영역 -->
+  <div id="numpad">
+    <button class="btn" onclick="inputNumber(1)">1</button>
+    <button class="btn" onclick="inputNumber(2)">2</button>
+    <button class="btn" onclick="inputNumber(3)">3</button>
+    <button class="btn" onclick="inputNumber(4)">4</button>
+    <button class="btn" onclick="inputNumber(5)">5</button>
+    <button class="btn" onclick="inputNumber(6)">6</button>
+    <button class="btn" onclick="inputNumber(7)">7</button>
+    <button class="btn" onclick="inputNumber(8)">8</button>
+    <button class="btn" onclick="inputNumber(9)">9</button>
+    <button class="btn btn-action" onclick="clearAnswer()">지우기</button>
+    <button class="btn" onclick="inputNumber(0)">0</button>
+    <button class="btn btn-action" onclick="deleteLast()">←</button>
+    <button class="btn btn-submit" onclick="submitAnswer()">공격! (정답 제출)</button>
+  </div>
+
+  <script>
+    // ==========================================
+    // 설정 영역: 배포하신 GAS 웹앱 URL을 여기에 붙여넣으세요.
+    // ==========================================
+    const API_URL = 'https://script.google.com/macros/s/AKfycbx2-yitbFxrT-xk4iWncBNLfuhyIrgHcPUTRmpLQtih4-xs9oAUCLLsiDhWqmhvmZ7k/exec';
+    const USER_ID = 'hero_01'; // 아들의 아이디
+
+    // 게임 상태 변수
+    let currentAnswer = "";
+    let questionStartTime = 0;
+    
+    // 임시 더미 데이터 (구글 시트와 연동 전 테스트용)
+    // 실제 운영 시에는 이 부분을 API 호출 결과로 대체하시면 됩니다.
+    let currentQuestion = {
+      id: "Q_001",
+      text: "24 + 15 = ?",
+      answer: "39",
+      monster: "🐉"
+    };
+
+    // ==========================================
+    // 프론트엔드 조작 함수
+    // ==========================================
+    
+    // 화면 초기화 및 첫 문제 로드
+    window.onload = () => {
+      // TODO: 추후 API_URL을 통해 getHeroStatus 와 getStageQuestions 를 호출하는 로직 추가
+      renderQuestion();
+    };
+
+    // 문제 화면에 표시
+    function renderQuestion() {
+      document.getElementById('monster').innerText = currentQuestion.monster;
+      document.getElementById('question').innerText = currentQuestion.text;
+      currentAnswer = "";
+      updateAnswerDisplay();
+      questionStartTime = Date.now();
+      showMessage("몬스터가 나타났다!");
+    }
+
+    // 숫자 키패드 입력
+    function inputNumber(num) {
+      if(currentAnswer.length < 5) { // 정답 길이 제한
+        currentAnswer += num;
+        updateAnswerDisplay();
+      }
+    }
+
+    // 한 칸 지우기
+    function deleteLast() {
+      currentAnswer = currentAnswer.slice(0, -1);
+      updateAnswerDisplay();
+    }
+
+    // 전체 지우기
+    function clearAnswer() {
+      currentAnswer = "";
+      updateAnswerDisplay();
+    }
+
+    // 입력창 UI 업데이트
+    function updateAnswerDisplay() {
+      document.getElementById('answer-display').innerText = currentAnswer;
+    }
+
+    // 메시지 로그 업데이트
+    function showMessage(msg, color = "#2ecc71") {
+      const msgLog = document.getElementById('message-log');
+      msgLog.innerText = msg;
+      msgLog.style.color = color;
+    }
+
+    // ==========================================
+    // 정답 제출 및 서버(GAS) 통신
+    // ==========================================
+    async function submitAnswer() {
+      if (currentAnswer === "") {
+        showMessage("답을 입력해주세요!", "#f1c40f");
+        return;
+      }
+
+      const solveTimeSec = Math.floor((Date.now() - questionStartTime) / 1000);
+      const isCorrect = (currentAnswer === currentQuestion.answer);
+
+      if (isCorrect) {
+        showMessage(`정답입니다! 몬스터를 물리쳤다! (${solveTimeSec}초 소요)`, "#3498db");
+        document.getElementById('monster').innerText = "💥"; // 처치 이펙트
+      } else {
+        showMessage("앗, 공격이 빗나갔다! 다시 계산해보자.", "#e74c3c");
+        currentAnswer = "";
+        updateAnswerDisplay();
+        return; // 오답이면 API 전송 없이 다시 풀게 하려면 여기서 중단 (또는 오답도 기록하려면 아래 로직 유지)
+      }
+
+      // 서버로 보낼 데이터 페이로드
+      const payload = {
+        action: "submitBattleResult",
+        userId: USER_ID,
+        questionId: currentQuestion.id,
+        userAnswer: currentAnswer,
+        isCorrect: isCorrect,
+        solveTimeSec: solveTimeSec,
+        earnedExp: isCorrect ? 10 : 0,
+        earnedGold: isCorrect ? 5 : 0
+      };
+
+      try {
+        // [주의] 실제 GAS 통신을 위해 아래 주석을 해제하세요.
+        /*
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' }, // CORS 회피용
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        
+        if(result.success && result.data.triggerEliteBoss) {
+            showMessage("위험해! 선행학습용 엘리트 몬스터가 난입했다!", "#e74c3c");
+            // TODO: 엘리트 몬스터 문제 로드 로직
+        }
+        */
+        
+        // 다음 문제로 넘어가는 더미 타이머 (2초 후)
+        setTimeout(() => {
+          // 테스트용 더미 다음 문제 
+          currentQuestion = { id: "Q_002", text: "8 × 7 = ?", answer: "56", monster: "👻" };
+          renderQuestion();
+        }, 2000);
+
+      } catch (error) {
+        console.error("서버 통신 에러:", error);
+        showMessage("통신에 실패했습니다.", "#e74c3c");
+      }
+    }
+  </script>
+</body>
+</html>
