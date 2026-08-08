@@ -5,14 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>수학 용사의 모험</title>
   <style>
+    /* 전체 리셋 및 터치 최적화 */
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', sans-serif; touch-action: manipulation; }
     html, body { width: 100%; height: 100%; background-color: #2c3e50; color: white; overflow: hidden; }
     #app-container { position: absolute; top: 0; bottom: 0; left: 0; right: 0; display: flex; flex-direction: column; }
     
+    /* 상단 대시보드 */
     #dashboard { flex-shrink: 0; background-color: #34495e; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #1abc9c; }
-    .hero-info { font-size: 1.2rem; font-weight: bold; color: #f1c40f; }
+    .hero-info { font-size: 1.2rem; font-weight: bold; color: #f1c40f; display: flex; align-items: center; gap: 10px; }
     .hero-hp { font-size: 1.2rem; color: #e74c3c; }
+    .home-btn { background-color: #27ae60; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-weight: bold; cursor: pointer; }
 
+    /* 화면 전환용 공통 클래스 */
+    .screen { flex: 1; display: none; flex-direction: column; }
+    .screen.active { display: flex; } /* active 클래스가 붙은 화면만 보임 */
+
+    /* -------------------------------------- */
+    /* [화면 1] 스테이지 선택 (월드 맵) 영역 */
+    /* -------------------------------------- */
+    #stage-screen { justify-content: center; align-items: center; padding: 20px; overflow-y: auto; background-color: #2c3e50; }
+    .stage-title { font-size: 2rem; margin-bottom: 30px; color: #f1c40f; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center; }
+    .stage-grid { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 400px; }
+    .stage-btn { background-color: #34495e; color: white; font-size: 1.5rem; font-weight: bold; padding: 20px; border: 2px solid #1abc9c; border-radius: 15px; text-align: left; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.1s; }
+    .stage-btn:active { transform: scale(0.98); }
+    .stage-icon { font-size: 2rem; margin-right: 15px; vertical-align: middle; }
+
+    /* -------------------------------------- */
+    /* [화면 2] 전투 영역 및 숫자 키패드 */
+    /* -------------------------------------- */
     #battle-area { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 10px; overflow-y: auto; }
     #monster { font-size: 80px; margin-bottom: 15px; animation: bounce 1s infinite alternate; }
     #question { font-size: 3rem; font-weight: bold; background: #ecf0f1; color: #2c3e50; padding: 15px 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); text-align: center; word-break: keep-all; }
@@ -31,33 +51,55 @@
 <body>
 
   <div id="app-container">
+    
+    <!-- 상단 대시보드 (항상 보임) -->
     <div id="dashboard">
-      <div class="hero-info" id="hero-name">용사 레벨 1</div>
+      <div class="hero-info" id="hero-name">
+        <button class="home-btn" onclick="showStageScreen()">🏠 마을로</button>
+        용사 레벨 1
+      </div>
       <div class="hero-hp" id="hero-hp">❤️ HP: 100</div>
     </div>
 
-    <div id="battle-area">
-      <div id="monster">⏳</div>
-      <div id="question">로딩 중...</div>
-      <div id="answer-display"></div>
-      <div id="message-log" style="color: #f1c40f;">서버에서 몬스터들을 소환하는 중입니다...</div>
+    <!-- [화면 1] 스테이지 선택 화면 (초기 활성화) -->
+    <div id="stage-screen" class="screen active">
+      <div class="stage-title">🗺️ 어디로 모험을 떠날까?</div>
+      <div class="stage-grid">
+        <!-- onclick 속성에 (단원명, 난이도)를 전달합니다. 시트의 데이터와 일치해야 합니다. -->
+        <button class="stage-btn" onclick="startStage('덧셈', 1)"><span class="stage-icon">🌲</span>덧셈의 숲 (Lv.1)</button>
+        <button class="stage-btn" onclick="startStage('구구단', 2)"><span class="stage-icon">🦇</span>구구단의 동굴 (Lv.2)</button>
+        <button class="stage-btn" onclick="startStage('나눗셈', 3)"><span class="stage-icon">💀</span>나눗셈의 무덤 (Lv.3)</button>
+        <button class="stage-btn" onclick="startStage('분수', 4)"><span class="stage-icon">🌋</span>분수의 화산 (Lv.4)</button>
+        <button class="stage-btn" style="border-color: #e74c3c;" onclick="startStage('종합응용', 5)"><span class="stage-icon">🐉</span>드래곤의 둥지 (Boss)</button>
+      </div>
     </div>
 
-    <div id="numpad">
-      <button class="btn" onclick="inputNumber(1)">1</button>
-      <button class="btn" onclick="inputNumber(2)">2</button>
-      <button class="btn" onclick="inputNumber(3)">3</button>
-      <button class="btn" onclick="inputNumber(4)">4</button>
-      <button class="btn" onclick="inputNumber(5)">5</button>
-      <button class="btn" onclick="inputNumber(6)">6</button>
-      <button class="btn" onclick="inputNumber(7)">7</button>
-      <button class="btn" onclick="inputNumber(8)">8</button>
-      <button class="btn" onclick="inputNumber(9)">9</button>
-      <button class="btn btn-action" onclick="clearAnswer()">지우기</button>
-      <button class="btn" onclick="inputNumber(0)">0</button>
-      <button class="btn btn-action" onclick="deleteLast()">←</button>
-      <button class="btn btn-submit" onclick="submitAnswer()">공격! (정답 제출)</button>
+    <!-- [화면 2] 전투 화면 및 키패드 (초기 숨김) -->
+    <div id="battle-screen" class="screen">
+      <div id="battle-area">
+        <div id="monster">⏳</div>
+        <div id="question">로딩 중...</div>
+        <div id="answer-display"></div>
+        <div id="message-log" style="color: #f1c40f;">서버에서 몬스터들을 소환하는 중입니다...</div>
+      </div>
+
+      <div id="numpad">
+        <button class="btn" onclick="inputNumber(1)">1</button>
+        <button class="btn" onclick="inputNumber(2)">2</button>
+        <button class="btn" onclick="inputNumber(3)">3</button>
+        <button class="btn" onclick="inputNumber(4)">4</button>
+        <button class="btn" onclick="inputNumber(5)">5</button>
+        <button class="btn" onclick="inputNumber(6)">6</button>
+        <button class="btn" onclick="inputNumber(7)">7</button>
+        <button class="btn" onclick="inputNumber(8)">8</button>
+        <button class="btn" onclick="inputNumber(9)">9</button>
+        <button class="btn btn-action" onclick="clearAnswer()">지우기</button>
+        <button class="btn" onclick="inputNumber(0)">0</button>
+        <button class="btn btn-action" onclick="deleteLast()">←</button>
+        <button class="btn btn-submit" onclick="submitAnswer()">공격! (정답 제출)</button>
+      </div>
     </div>
+
   </div>
 
   <script>
@@ -67,34 +109,54 @@
     const API_URL = 'https://script.google.com/macros/s/AKfycbx2-yitbFxrT-xk4iWncBNLfuhyIrgHcPUTRmpLQtih4-xs9oAUCLLsiDhWqmhvmZ7k/exec'; 
     const USER_ID = 'hero_01'; 
     
-    // 시트에서 불러올 문제의 조건 (아까 입력한 예시 데이터와 일치하게 설정)
-    const CURRENT_CATEGORY = '덧셈'; 
-    const CURRENT_DIFFICULTY = 1;
-
-    let questionList = []; // 서버에서 받아온 문제들을 담을 배열
-    let currentIndex = 0;  // 현재 몇 번째 문제를 풀고 있는지
-    let currentQuestion = null; // 현재 문제 데이터
+    let questionList = []; 
+    let currentIndex = 0;  
+    let currentQuestion = null; 
     let currentAnswer = "";
     let questionStartTime = 0;
 
-    // 앱이 켜지면 가장 먼저 실행되는 함수
-    window.onload = () => {
-      loadQuestions();
-    };
+    // ==========================================
+    // 화면 전환 로직
+    // ==========================================
+    
+    // 스테이지 선택 화면 보여주기
+    function showStageScreen() {
+      document.getElementById('battle-screen').classList.remove('active');
+      document.getElementById('stage-screen').classList.add('active');
+      currentQuestion = null; // 전투 중단
+    }
 
-    // 1. 서버(구글 시트)에서 문제 불러오기
-    async function loadQuestions() {
+    // 전투 화면 보여주기 및 해당 스테이지 문제 로드
+    function startStage(category, difficulty) {
+      document.getElementById('stage-screen').classList.remove('active');
+      document.getElementById('battle-screen').classList.add('active');
+      
+      // 전투 화면 초기화 세팅
+      document.getElementById('monster').innerText = "⏳";
+      document.getElementById('question').innerText = "로딩 중...";
+      document.getElementById('answer-display').innerText = "";
+      showMessage(`${category} 지역으로 진입합니다...`, "#f1c40f");
+
+      // API 호출하여 문제 가져오기
+      loadQuestions(category, difficulty);
+    }
+
+    // ==========================================
+    // 전투 및 통신 로직
+    // ==========================================
+
+    async function loadQuestions(category, difficulty) {
       try {
-        const url = `${API_URL}?action=getStageQuestions&category=${CURRENT_CATEGORY}&difficulty=${CURRENT_DIFFICULTY}`;
+        const url = `${API_URL}?action=getStageQuestions&category=${category}&difficulty=${difficulty}`;
         const response = await fetch(url);
         const result = await response.json();
 
         if (result.success && result.data.length > 0) {
           questionList = result.data;
           currentIndex = 0;
-          nextQuestion(); // 첫 번째 문제 화면에 표시
+          nextQuestion(); 
         } else {
-          showMessage("이 스테이지에는 아직 몬스터가 없습니다!", "#e74c3c");
+          showMessage("이 지역에는 아직 몬스터가 없습니다!", "#e74c3c");
           document.getElementById('question').innerText = "문제 없음";
           document.getElementById('monster').innerText = "텅~";
         }
@@ -104,23 +166,25 @@
       }
     }
 
-    // 2. 화면에 다음 문제 그리기
     function nextQuestion() {
-      // 모든 문제를 다 풀었을 때
       if (currentIndex >= questionList.length) {
         showMessage("스테이지 클리어! 모든 몬스터를 물리쳤습니다! 🎉", "#f1c40f");
         document.getElementById('monster').innerText = "👑";
         document.getElementById('question').innerText = "CLEAR!";
         currentQuestion = null;
+        
+        // 3초 뒤에 자동으로 마을(스테이지 선택 화면)로 귀환
+        setTimeout(() => {
+          showStageScreen();
+        }, 3000);
         return;
       }
 
-      // 시트의 컬럼명과 매핑
       const qData = questionList[currentIndex];
       currentQuestion = {
         id: qData.question_id,
         text: qData.question_text,
-        answer: String(qData.answer), // 입력값 비교를 위해 문자로 변환
+        answer: String(qData.answer), 
         monster: qData.monster_name
       };
 
@@ -159,7 +223,6 @@
       msgLog.style.color = color;
     }
 
-    // 3. 정답 제출 및 서버로 결과 전송
     function submitAnswer() {
       if (!currentQuestion) return; 
       if (currentAnswer === "") {
@@ -180,7 +243,6 @@
         return; 
       }
 
-      // 서버에 보낼 전투 기록 데이터
       const payload = {
         action: "submitBattleResult",
         userId: USER_ID,
@@ -192,7 +254,6 @@
         earnedGold: isCorrect ? 5 : 0
       };
 
-      // 백엔드로 전송 (게임 흐름이 끊기지 않게 비동기 전송)
       fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
@@ -201,7 +262,6 @@
         .then(result => console.log("서버 기록 완료:", result))
         .catch(err => console.error("기록 전송 실패:", err));
 
-      // 1.5초 뒤에 다음 문제로 넘어감
       setTimeout(() => {
         currentIndex++;
         nextQuestion();
