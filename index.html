@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>수학 용사의 모험</title>
   <style>
-    /* 전체 리셋 및 터치 최적화 */
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', sans-serif; touch-action: manipulation; }
     html, body { width: 100%; height: 100%; background-color: #2c3e50; color: white; overflow: hidden; }
     #app-container { position: absolute; top: 0; bottom: 0; left: 0; right: 0; display: flex; flex-direction: column; }
@@ -13,37 +12,43 @@
     /* 상단 대시보드 */
     #dashboard { flex-shrink: 0; background-color: #34495e; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #1abc9c; }
     .hero-info { font-size: 1.2rem; font-weight: bold; color: #f1c40f; display: flex; align-items: center; gap: 10px; }
-    .hero-hp { font-size: 1.2rem; color: #e74c3c; }
+    .hero-stats { font-size: 1.2rem; display: flex; gap: 15px; align-items: center; }
+    .stat-hp { color: #e74c3c; }
+    .stat-gold { color: #f1c40f; font-weight: bold; background: rgba(0,0,0,0.3); padding: 3px 10px; border-radius: 10px; }
     .home-btn { background-color: #27ae60; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-weight: bold; cursor: pointer; }
 
     /* 화면 전환용 공통 클래스 */
     .screen { flex: 1; display: none; flex-direction: column; }
-    .screen.active { display: flex; } /* active 클래스가 붙은 화면만 보임 */
+    .screen.active { display: flex; }
 
-    /* -------------------------------------- */
-    /* [화면 1] 스테이지 선택 (월드 맵) 영역 */
-    /* -------------------------------------- */
-    #stage-screen { justify-content: center; align-items: center; padding: 20px; overflow-y: auto; background-color: #2c3e50; }
-    .stage-title { font-size: 2rem; margin-bottom: 30px; color: #f1c40f; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center; }
+    /* [화면 1] 스테이지 선택 (월드 맵) */
+    #stage-screen { justify-content: flex-start; align-items: center; padding: 20px; overflow-y: auto; background-color: #2c3e50; }
+    .stage-title { font-size: 2rem; margin: 20px 0; color: #f1c40f; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center; }
     .stage-grid { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 400px; }
-    .stage-btn { background-color: #34495e; color: white; font-size: 1.5rem; font-weight: bold; padding: 20px; border: 2px solid #1abc9c; border-radius: 15px; text-align: left; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.1s; }
-    .stage-btn:active { transform: scale(0.98); }
+    .stage-btn { background-color: #34495e; color: white; font-size: 1.5rem; font-weight: bold; padding: 20px; border: 2px solid #1abc9c; border-radius: 15px; text-align: left; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; }
+    .shop-btn { background-color: #8e44ad; border-color: #9b59b6; text-align: center; margin-top: 10px; }
     .stage-icon { font-size: 2rem; margin-right: 15px; vertical-align: middle; }
 
-    /* -------------------------------------- */
-    /* [화면 2] 전투 영역 및 숫자 키패드 */
-    /* -------------------------------------- */
+    /* [화면 2] 전투 영역 */
     #battle-area { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 10px; overflow-y: auto; }
     #monster { font-size: 80px; margin-bottom: 15px; animation: bounce 1s infinite alternate; }
-    #question { font-size: 3rem; font-weight: bold; background: #ecf0f1; color: #2c3e50; padding: 15px 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); text-align: center; word-break: keep-all; }
+    #question { font-size: 3rem; font-weight: bold; background: #ecf0f1; color: #2c3e50; padding: 15px 30px; border-radius: 15px; text-align: center; word-break: keep-all; }
     #answer-display { font-size: 2.5rem; color: #3498db; margin-top: 15px; min-height: 50px; font-weight: bold; }
     #message-log { font-size: 1.2rem; color: #2ecc71; margin-top: 5px; min-height: 30px; text-align: center; }
 
+    /* 숫자 키패드 */
     #numpad { flex-shrink: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; padding-bottom: max(15px, env(safe-area-inset-bottom)); background-color: #bdc3c7; border-top-left-radius: 20px; border-top-right-radius: 20px; }
-    .btn { background-color: #fff; color: #333; font-size: 1.8rem; font-weight: bold; padding: 15px 0; border: none; border-radius: 10px; box-shadow: 0 4px #95a5a6; cursor: pointer; user-select: none; }
+    .btn { background-color: #fff; color: #333; font-size: 1.8rem; font-weight: bold; padding: 15px 0; border: none; border-radius: 10px; box-shadow: 0 4px #95a5a6; cursor: pointer; }
     .btn:active { transform: translateY(4px); box-shadow: 0 0 #95a5a6; }
     .btn-action { background-color: #f39c12; color: white; box-shadow: 0 4px #d68910; }
     .btn-submit { background-color: #2ecc71; color: white; box-shadow: 0 4px #27ae60; grid-column: span 3; font-size: 1.5rem; padding: 20px 0; }
+
+    /* [화면 3] 상점 영역 */
+    #shop-screen { padding: 20px; overflow-y: auto; align-items: center; }
+    .shop-item { background: #34495e; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 400px; margin-bottom: 10px; }
+    .shop-item-name { font-size: 1.3rem; font-weight: bold; }
+    .buy-btn { background: #f1c40f; color: #2c3e50; font-weight: bold; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; }
+    .owned-btn { background: #7f8c8d; color: white; font-weight: bold; border: none; padding: 10px 15px; border-radius: 8px; font-size: 1.1rem; }
 
     @keyframes bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-20px); } }
   </style>
@@ -52,29 +57,32 @@
 
   <div id="app-container">
     
-    <!-- 상단 대시보드 (항상 보임) -->
+    <!-- 상단 대시보드 -->
     <div id="dashboard">
       <div class="hero-info" id="hero-name">
         <button class="home-btn" onclick="showStageScreen()">🏠 마을로</button>
-        용사 레벨 1
+        용사 Lv.<span id="display-level">1</span>
       </div>
-      <div class="hero-hp" id="hero-hp">❤️ HP: 100</div>
+      <div class="hero-stats">
+        <span class="stat-hp">❤️ 100</span>
+        <span class="stat-gold" id="display-gold">💰 0</span>
+      </div>
     </div>
 
-    <!-- [화면 1] 스테이지 선택 화면 (초기 활성화) -->
+    <!-- [화면 1] 스테이지 선택 화면 -->
     <div id="stage-screen" class="screen active">
       <div class="stage-title">🗺️ 어디로 모험을 떠날까?</div>
       <div class="stage-grid">
-        <!-- onclick 속성에 (단원명, 난이도)를 전달합니다. 시트의 데이터와 일치해야 합니다. -->
-        <button class="stage-btn" onclick="startStage('덧셈', 1)"><span class="stage-icon">🌲</span>덧셈의 숲 (Lv.1)</button>
-        <button class="stage-btn" onclick="startStage('구구단', 2)"><span class="stage-icon">🦇</span>구구단의 동굴 (Lv.2)</button>
-        <button class="stage-btn" onclick="startStage('나눗셈', 3)"><span class="stage-icon">💀</span>나눗셈의 무덤 (Lv.3)</button>
-        <button class="stage-btn" onclick="startStage('분수', 4)"><span class="stage-icon">🌋</span>분수의 화산 (Lv.4)</button>
-        <button class="stage-btn" style="border-color: #e74c3c;" onclick="startStage('종합응용', 5)"><span class="stage-icon">🐉</span>드래곤의 둥지 (Boss)</button>
+        <button class="stage-btn" onclick="startStage('덧셈', 1)"><span class="stage-icon">🌲</span>덧셈의 숲</button>
+        <button class="stage-btn" onclick="startStage('구구단', 2)"><span class="stage-icon">🦇</span>구구단의 동굴</button>
+        <button class="stage-btn" onclick="startStage('나눗셈', 3)"><span class="stage-icon">💀</span>나눗셈의 무덤</button>
+        <button class="stage-btn" onclick="startStage('분수', 4)"><span class="stage-icon">🌋</span>분수의 화산</button>
+        <button class="stage-btn" style="border-color: #e74c3c;" onclick="startStage('종합응용', 5)"><span class="stage-icon">🐉</span>드래곤의 둥지</button>
+        <button class="stage-btn shop-btn" onclick="showShopScreen()"><span class="stage-icon">🛒</span>용사의 상점 가기</button>
       </div>
     </div>
 
-    <!-- [화면 2] 전투 화면 및 키패드 (초기 숨김) -->
+    <!-- [화면 2] 전투 화면 -->
     <div id="battle-screen" class="screen">
       <div id="battle-area">
         <div id="monster">⏳</div>
@@ -82,7 +90,6 @@
         <div id="answer-display"></div>
         <div id="message-log" style="color: #f1c40f;">서버에서 몬스터들을 소환하는 중입니다...</div>
       </div>
-
       <div id="numpad">
         <button class="btn" onclick="inputNumber(1)">1</button>
         <button class="btn" onclick="inputNumber(2)">2</button>
@@ -100,6 +107,14 @@
       </div>
     </div>
 
+    <!-- [화면 3] 상점 화면 -->
+    <div id="shop-screen" class="screen">
+      <div class="stage-title">🛒 아이템 상점</div>
+      <div id="shop-list" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+        <div>상점 아이템을 불러오는 중...</div>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -114,36 +129,128 @@
     let currentQuestion = null; 
     let currentAnswer = "";
     let questionStartTime = 0;
+    let currentGold = 0;
+
+    // 앱이 켜질 때 내 정보(레벨, 골드)를 불러옵니다.
+    window.onload = () => {
+      fetchHeroData();
+    };
+
+    async function fetchHeroData() {
+      try {
+        const url = `${API_URL}?action=getHeroStatus&userId=${USER_ID}`;
+        const response = await fetch(url);
+        const result = await response.json();
+        if (result.success && result.data) {
+          document.getElementById('display-level').innerText = result.data.level;
+          currentGold = Number(result.data.total_gold) || 0;
+          document.getElementById('display-gold').innerText = `💰 ${currentGold}`;
+        }
+      } catch (error) {
+        console.error("영웅 데이터 로드 실패", error);
+      }
+    }
 
     // ==========================================
     // 화면 전환 로직
     // ==========================================
-    
-    // 스테이지 선택 화면 보여주기
-    function showStageScreen() {
+    function hideAllScreens() {
+      document.getElementById('stage-screen').classList.remove('active');
       document.getElementById('battle-screen').classList.remove('active');
-      document.getElementById('stage-screen').classList.add('active');
-      currentQuestion = null; // 전투 중단
+      document.getElementById('shop-screen').classList.remove('active');
     }
 
-    // 전투 화면 보여주기 및 해당 스테이지 문제 로드
-    function startStage(category, difficulty) {
-      document.getElementById('stage-screen').classList.remove('active');
-      document.getElementById('battle-screen').classList.add('active');
+    function showStageScreen() {
+      hideAllScreens();
+      document.getElementById('stage-screen').classList.add('active');
+      currentQuestion = null; 
+      fetchHeroData(); // 마을에 올 때마다 최신 골드 업데이트
+    }
+
+    // 상점 화면 보여주기
+    async function showShopScreen() {
+      hideAllScreens();
+      document.getElementById('shop-screen').classList.add('active');
+      const shopList = document.getElementById('shop-list');
+      shopList.innerHTML = "<div style='color:#f1c40f;'>진열대를 정리하는 중...</div>";
+
+      try {
+        const url = `${API_URL}?action=getShopItems`;
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if (result.success) {
+          shopList.innerHTML = "";
+          result.data.forEach(item => {
+            // is_purchased 값이 구글 시트에서 TRUE 문자열이거나 true 불리언으로 올 수 있음
+            const isOwned = (item.is_purchased === true || String(item.is_purchased).toUpperCase() === "TRUE");
+            
+            const btnHtml = isOwned 
+              ? `<button class="owned-btn" disabled>보유 중</button>` 
+              : `<button class="buy-btn" onclick="buyItem('${item.item_id}', ${item.price_gold})">💰 ${item.price_gold}</button>`;
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'shop-item';
+            itemDiv.innerHTML = `
+              <div class="shop-item-name">${item.item_name}</div>
+              <div>${btnHtml}</div>
+            `;
+            shopList.appendChild(itemDiv);
+          });
+        }
+      } catch (error) {
+        shopList.innerHTML = "<div style='color:#e74c3c;'>상점과 연결이 끊어졌습니다.</div>";
+      }
+    }
+
+    // 상점 아이템 구매 로직
+    async function buyItem(itemId, price) {
+      if (currentGold < price) {
+        alert(`골드가 부족합니다! (현재 골드: ${currentGold})`);
+        return;
+      }
       
-      // 전투 화면 초기화 세팅
+      if (!confirm(`이 아이템을 ${price}골드에 구매하시겠습니까?`)) return;
+
+      const payload = {
+        action: "purchaseItem",
+        userId: USER_ID,
+        itemId: itemId,
+        price: price
+      };
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          alert("아이템을 성공적으로 구매했습니다!");
+          fetchHeroData(); // 골드 갱신
+          showShopScreen(); // 상점 진열대 새로고침 (버튼을 '보유 중'으로 바꾸기 위함)
+        } else {
+          alert(result.message || "구매에 실패했습니다.");
+        }
+      } catch (error) {
+        alert("서버 오류로 구매를 진행할 수 없습니다.");
+      }
+    }
+
+    // ==========================================
+    // 전투 로직
+    // ==========================================
+    function startStage(category, difficulty) {
+      hideAllScreens();
+      document.getElementById('battle-screen').classList.add('active');
       document.getElementById('monster').innerText = "⏳";
       document.getElementById('question').innerText = "로딩 중...";
       document.getElementById('answer-display').innerText = "";
       showMessage(`${category} 지역으로 진입합니다...`, "#f1c40f");
-
-      // API 호출하여 문제 가져오기
       loadQuestions(category, difficulty);
     }
-
-    // ==========================================
-    // 전투 및 통신 로직
-    // ==========================================
 
     async function loadQuestions(category, difficulty) {
       try {
@@ -161,7 +268,6 @@
           document.getElementById('monster').innerText = "텅~";
         }
       } catch (error) {
-        console.error("통신 에러:", error);
         showMessage("통신 에러! API 주소를 확인해주세요.", "#e74c3c");
       }
     }
@@ -172,11 +278,7 @@
         document.getElementById('monster').innerText = "👑";
         document.getElementById('question').innerText = "CLEAR!";
         currentQuestion = null;
-        
-        // 3초 뒤에 자동으로 마을(스테이지 선택 화면)로 귀환
-        setTimeout(() => {
-          showStageScreen();
-        }, 3000);
+        setTimeout(() => { showStageScreen(); }, 3000);
         return;
       }
 
@@ -202,21 +304,9 @@
         updateAnswerDisplay();
       }
     }
-
-    function deleteLast() {
-      currentAnswer = currentAnswer.slice(0, -1);
-      updateAnswerDisplay();
-    }
-
-    function clearAnswer() {
-      currentAnswer = "";
-      updateAnswerDisplay();
-    }
-
-    function updateAnswerDisplay() {
-      document.getElementById('answer-display').innerText = currentAnswer;
-    }
-
+    function deleteLast() { currentAnswer = currentAnswer.slice(0, -1); updateAnswerDisplay(); }
+    function clearAnswer() { currentAnswer = ""; updateAnswerDisplay(); }
+    function updateAnswerDisplay() { document.getElementById('answer-display').innerText = currentAnswer; }
     function showMessage(msg, color = "#2ecc71") {
       const msgLog = document.getElementById('message-log');
       msgLog.innerText = msg;
@@ -225,10 +315,7 @@
 
     function submitAnswer() {
       if (!currentQuestion) return; 
-      if (currentAnswer === "") {
-        showMessage("답을 입력해주세요!", "#f1c40f");
-        return;
-      }
+      if (currentAnswer === "") { showMessage("답을 입력해주세요!", "#f1c40f"); return; }
 
       const solveTimeSec = Math.floor((Date.now() - questionStartTime) / 1000);
       const isCorrect = (currentAnswer === currentQuestion.answer);
@@ -250,17 +337,15 @@
         userAnswer: currentAnswer,
         isCorrect: isCorrect,
         solveTimeSec: solveTimeSec,
-        earnedExp: isCorrect ? 10 : 0,
-        earnedGold: isCorrect ? 5 : 0
+        earnedExp: 10,
+        earnedGold: 5
       };
 
       fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(payload)
-      }).then(res => res.json())
-        .then(result => console.log("서버 기록 완료:", result))
-        .catch(err => console.error("기록 전송 실패:", err));
+      });
 
       setTimeout(() => {
         currentIndex++;
